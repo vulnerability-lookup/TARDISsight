@@ -21,7 +21,7 @@ import requests  # type: ignore[import-untyped]
 from statsmodels.tsa.statespace.sarimax import SARIMAX  # type: ignore[import-untyped]
 
 # --- Parameters ---
-vuln_id = "CVE-2025-8088"
+vuln_id = input("Vulnerability id: ")
 per_page = 100
 page = 1
 

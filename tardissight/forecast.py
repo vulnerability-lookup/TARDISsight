@@ -1,3 +1,13 @@
+"""test
+
+
+Details about the model:
+- Log-transform counts WITH seasonal components
+- Transform data with log(x+1) before fitting SARIMAX
+- optionnaly with exog
+
+"""
+
 import requests  # type: ignore[import-untyped]
 import pandas as pd  # type: ignore[import-untyped]
 import numpy as np
@@ -5,7 +15,7 @@ import matplotlib.pyplot as plt
 from statsmodels.tsa.statespace.sarimax import SARIMAX  # type: ignore[import-untyped]
 
 # --- Parameters ---
-vuln_id = "CVE-2025-61884"
+vuln_id = input("Vulnerability id: ")
 per_page = 100
 page = 1
 

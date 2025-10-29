@@ -3,13 +3,13 @@
 ## Usage
 
 
-```bash
-python forecast1.py
-```
-
 ### Examples
 
 Using SARIMAX Log-transform counts WITHOUT seasonal components.
+
+```bash
+python forecast1.py
+```
 
 #### Sightings forecast for CVE-2025-54236 on 10/29/2025
 
@@ -23,3 +23,21 @@ Using SARIMAX Log-transform counts WITHOUT seasonal components.
 
 
 SARIMAX needs a lot more data for this use case.
+
+
+#### Sightings forecast for CVE-2025-8088 on 10/30/2025
+
+```bash
+python forecast2.py
+```
+
+Poisson-based Forecast of Vulnerability Sightings (Adaptive Daily/Weekly)
+
+![alt text](docs/example-forecast-3.png)
+
+
+#### Sightings forecast for CVE-2025-59287 on 10/30/2025
+
+Poisson-based Forecast of Vulnerability Sightings (Adaptive Daily/Weekly)
+
+![alt text](docs/example-forecast-4.png)

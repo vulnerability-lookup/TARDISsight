@@ -1,50 +1,19 @@
 # TARDISsight
 
-## Usage
+
+## Documentation
+
+You can find information about the various experiments in the ``docs`` folder.
 
 
-### Examples
 
-Using SARIMAX Log-transform counts WITHOUT seasonal components.
+## License
 
-```bash
-python forecast1.py
-```
+[VulnTrain](https://github.com/vulnerability-lookup/VulnTrain) is licensed under
+[GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.html)
 
-#### Sightings forecast for CVE-2025-54236 on 10/29/2025
+~~~
+Copyright (c) 2025 Computer Incident Response Center Luxembourg (CIRCL)
+Copyright (C) 2025 Cédric Bonhomme - https://github.com/cedricbonhomme
+~~~
 
-![Example forecast for CVE-2025-54236](docs/example-forecast-1.png)
-
-
-#### Sightings forecast for CVE-2025-8088 on 10/29/2025
-
-
-![Example forecast for CVE-2025-8088](docs/example-forecast-2.png)
-
-
-SARIMAX needs a lot more data for this use case.
-
-
-#### Sightings forecast for CVE-2025-8088 on 10/30/2025
-
-```bash
-python forecast2.py
-```
-
-Poisson-based Forecast of Vulnerability Sightings (Adaptive Daily/Weekly)
-
-![alt text](docs/example-forecast-3.png)
-
-
-#### Sightings forecast for CVE-2025-59287 on 10/30/2025
-
-Poisson-based Forecast of Vulnerability Sightings (Adaptive Daily/Weekly)
-
-![alt text](docs/example-forecast-4.png)
-
-
-#### Sightings forecast for CVE-2025-54236 on 10/30/2025
-
-Poisson-based Forecast of Vulnerability Sightings (Adaptive Daily/Weekly)
-
-![alt text](docs/example-forecast-5.png)

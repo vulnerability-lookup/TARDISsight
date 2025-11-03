@@ -9,7 +9,7 @@ You can find information about the various experiments in the ``docs`` folder.
 
 ## License
 
-[VulnTrain](https://github.com/vulnerability-lookup/VulnTrain) is licensed under
+[TARDISsight](https://github.com/vulnerability-lookup/TARDISsight) is licensed under
 [GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.html)
 
 ~~~

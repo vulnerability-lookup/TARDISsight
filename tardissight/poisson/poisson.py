@@ -1,14 +1,13 @@
-
 """
 Poisson-based Forecast of Vulnerability Sightings (Adaptive Daily/Weekly)
 """
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+import pandas as pd # type: ignore[import-untyped]
 import requests
-import statsmodels.api as sm
-import statsmodels.formula.api as smf
+import statsmodels.api as sm # type: ignore[import-untyped]
+import statsmodels.formula.api as smf # type: ignore[import-untyped]
 
 # --- Parameters ---
 vuln_id = input("Vulnerability id: ")
@@ -55,7 +54,7 @@ else:
 
 # --- Prepare data for Poisson regression ---
 df_series = series.reset_index()
-df_series['time_index'] = np.arange(len(df_series))
+df_series["time_index"] = np.arange(len(df_series))
 
 # --- Fit Poisson regression ---
 model = smf.glm("sightings ~ time_index", data=df_series, family=sm.families.Poisson())
@@ -71,26 +70,32 @@ forecast_ci = results.get_prediction(df_future).conf_int()
 # --- Prepare forecast dates ---
 last_date = df_series["date"].iloc[-1]
 forecast_dates = pd.date_range(
-    last_date + pd.Timedelta(days=1 if agg_level=="day" else 7),
+    last_date + pd.Timedelta(days=1 if agg_level == "day" else 7),
     periods=forecast_horizon,
-    freq=freq_str
+    freq=freq_str,
 )
 
 # Convert forecast to Series
 forecast_mean_series = pd.Series(forecast_mean, index=forecast_dates)
-forecast_ci_lower = pd.Series(forecast_ci[:,0], index=forecast_dates)
-forecast_ci_upper = pd.Series(forecast_ci[:,1], index=forecast_dates)
+forecast_ci_lower = pd.Series(forecast_ci[:, 0], index=forecast_dates)
+forecast_ci_upper = pd.Series(forecast_ci[:, 1], index=forecast_dates)
 
 # Combine observed + forecast for plotting
 all_dates = pd.concat([df_series["date"], forecast_mean_series.index.to_series()])
 all_values = pd.concat([df_series["sightings"], forecast_mean_series])
 
 # --- Plot ---
-plt.figure(figsize=(10,4))
+plt.figure(figsize=(10, 4))
 plt.bar(df_series["date"], df_series["sightings"], label="Observed", color="skyblue")
-plt.plot(all_dates, all_values, color="orange", label="Forecast")
-plt.fill_between(forecast_dates, forecast_ci_lower, forecast_ci_upper,
-                 color="lightblue", alpha=0.3, label="95% CI")
+plt.plot(all_dates, all_values, color="orange", label="Forecast (Poisson regression)")
+plt.fill_between(
+    forecast_dates,
+    forecast_ci_lower,
+    forecast_ci_upper,
+    color="lightblue",
+    alpha=0.3,
+    label="95% CI",
+)
 plt.title(f"Forecast of {agg_level}-aggregated sightings for {vuln_id}")
 plt.xlabel("Date")
 plt.ylabel("Sightings")

@@ -8,7 +8,6 @@ Original file is located at
 
 
 Details about the model:
-- v
 - Transform data with log(x+1) before fitting SARIMAX
 - optionnaly with exog
 

@@ -20,14 +20,14 @@ A smooth S-shaped curve when there's an early rise and saturation.
 A flat extension when activity already plateaued.
 
 When to use this model:
-s
+For newly published or trending vulnerabilities.
 """
 
 import numpy as np
-import pandas as pd
-import requests
+import pandas as pd # type: ignore[import-untyped]
+import requests # type: ignore[import-untyped]
 import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit # type: ignore[import-untyped]
 
 # --- Parameters ---
 vuln_id = input("Vulnerability id: ")

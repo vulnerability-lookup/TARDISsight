@@ -5,7 +5,7 @@ Poisson-based Forecast of Vulnerability Sightings (Adaptive Daily/Weekly)
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd # type: ignore[import-untyped]
-import requests
+import requests # type: ignore[import-untyped]
 import statsmodels.api as sm # type: ignore[import-untyped]
 import statsmodels.formula.api as smf # type: ignore[import-untyped]
 

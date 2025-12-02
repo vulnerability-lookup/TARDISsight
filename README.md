@@ -1,5 +1,6 @@
 # TARDISsight
 
+<img src="docs/TARDISSight-logo.svg" width="200" title="Sightings from the space-time continuum.">
 
 ## Documentation
 

@@ -6,6 +6,12 @@
 You can find information about the various experiments in the ``docs`` folder.
 
 
+## Related resources
+
+**Sightings report:**
+
+- [End-of-Year Threat Intelligence Sightings Forecast](https://www.vulnerability-lookup.org/2025/12/02/end-of-year-threat-intelligence-sightings-forecast/) (commit id: 4c0b684)
+
 
 ## License
 

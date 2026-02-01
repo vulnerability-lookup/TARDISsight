@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you use this code in your research or analyses, please cite the associated preprint."
+title: "TARDISsight: Vulnerability Forecast with Sightings"
+type: software
+
+authors:
+  - family-names: Bonhomme
+    given-names: Cédric
+  - family-names: Dulaunoy
+    given-names: Alexandre
+
+year: 2026
+
+repository-code: https://github.com/vulnerability-lookup/TARDISsight
+
+abstract: >
+  Vulnerability prioritization increasingly depends on understanding when a weakness becomes active in the real world—whether through PoC releases, scanner detections, or exploitation chatter. While existing scoring systems quantify potential impact, few approaches attempt to forecast how attention toward a vulnerability will evolve over time. In this presentation, we explore whether short-term forecasting of vulnerability sightings is feasible when data are extremely sparse, noisy, and burst-driven, as often observed in open intelligence sources. Building on the VLAI model, a transformer-based system that predicts CVSS-like severity from textual descriptions, we test multiple statistical approaches for forecasting sightings at the granularity of individual CVEs. We evaluate SARIMAX, Poisson regression, logistic growth, and exponential decay models on real-world data collected from exploit feeds, Fediverse monitoring, and shadowserver-like telemetry. Our experiments reveal that classical time-series models struggle under short observation windows and high variance, frequently yielding unstable or even negative predictions. Count-based regression and simple growth/decay functions, however, produce more interpretable results and naturally avoid impossible outputs. We present practical strategies for operational forecasting—automated model selection based on trend detection, real-time updates, and the integration of semantic severity signals. The talk focuses on actionable lessons for CTI teams: what is realistic to forecast, which models fail in practice, and how predictive analytics can help defenders anticipate activity spikes and patching urgency even when only limited early-life data is available.
+
+identifiers:
+  - type: url
+    value: https://easychair.org/publications/preprint/dRz5
+  - type: url
+    value: https://github.com/vulnerability-lookup/TARDISsight
+
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Bonhomme
+      given-names: Cédric
+    - family-names: Dulaunoy
+      given-names: Alexandre
+  title: "Forecasting Vulnerability Sightings Under Data Scarcity: Modeling Sparse and Bursty Cyber Threat Signals"
+  year: 2026
+  publisher: EasyChair
+  url: https://easychair.org/publications/preprint/dRz5
+

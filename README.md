@@ -14,6 +14,21 @@ You can find information about the various experiments in the ``docs`` folder.
 - [End-of-Year Threat Intelligence Sightings Forecast](https://www.vulnerability-lookup.org/2025/12/02/end-of-year-threat-intelligence-sightings-forecast/) (commit id: 4c0b684)
 
 
+## How to cite
+
+Bonhomme, C., & Dulaunoy, A. (2026). Forecasting Vulnerability Sightings Under Data Scarcity: Modeling Sparse and Bursty Cyber Threat Signals. https://easychair.org/publications/preprint/dRz5
+
+```bibtex
+@misc{EasyChair:16012,
+  author       = {C{\'e}dric Bonhomme and Alexandre Dulaunoy},
+  title        = {Forecasting Vulnerability Sightings Under Data Scarcity: Modeling Sparse and Bursty Cyber Threat Signals},
+  howpublished = {EasyChair Preprint},
+  note         = {Preprint 16012},
+  year         = {2026},
+  url          = {https://easychair.org/publications/preprint/dRz5}
+}
+```
+
 ## License
 
 [TARDISsight](https://github.com/vulnerability-lookup/TARDISsight) is licensed under

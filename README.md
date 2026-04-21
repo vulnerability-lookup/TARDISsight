@@ -16,16 +16,17 @@ You can find information about the various experiments in the ``docs`` folder.
 
 ## How to cite
 
-Bonhomme, C., & Dulaunoy, A. (2026). Forecasting Vulnerability Sightings Under Data Scarcity: Modeling Sparse and Bursty Cyber Threat Signals. https://easychair.org/publications/preprint/dRz5
+Bonhomme, C., & Dulaunoy, A. (2026). Modeling Sparse and Bursty Vulnerability Sightings: Forecasting Under Data Constraints. https://arxiv.org/abs/2604.16038
 
 ```bibtex
-@misc{EasyChair:16012,
-  author       = {C{\'e}dric Bonhomme and Alexandre Dulaunoy},
-  title        = {Forecasting Vulnerability Sightings Under Data Scarcity: Modeling Sparse and Bursty Cyber Threat Signals},
-  howpublished = {EasyChair Preprint},
-  note         = {Preprint 16012},
-  year         = {2026},
-  url          = {https://easychair.org/publications/preprint/dRz5}
+@misc{bonhomme2026modelingsparseburstyvulnerability,
+      title={Modeling Sparse and Bursty Vulnerability Sightings: Forecasting Under Data Constraints}, 
+      author={Cedric Bonhomme and Alexandre Dulaunoy},
+      year={2026},
+      eprint={2604.16038},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR},
+      url={https://arxiv.org/abs/2604.16038}, 
 }
 ```
 

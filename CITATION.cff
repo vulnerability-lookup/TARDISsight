@@ -1,6 +1,7 @@
 cff-version: 1.2.0
-message: "If you use this code in your research or analyses, please cite the associated preprint."
+message: "If you use this code in your research or analyses, please cite the associated paper."
 title: "TARDISsight: Vulnerability Forecast with Sightings"
+doi: 10.48550/arXiv.2604.16038
 type: software
 
 authors:
@@ -18,7 +19,7 @@ abstract: >
 
 identifiers:
   - type: url
-    value: https://easychair.org/publications/preprint/dRz5
+    value: https://arxiv.org/abs/2604.16038
   - type: url
     value: https://github.com/vulnerability-lookup/TARDISsight
 
@@ -27,10 +28,12 @@ preferred-citation:
   authors:
     - family-names: Bonhomme
       given-names: Cédric
+      orcid: https://orcid.org/0009-0003-7679-0109
     - family-names: Dulaunoy
       given-names: Alexandre
-  title: "Forecasting Vulnerability Sightings Under Data Scarcity: Modeling Sparse and Bursty Cyber Threat Signals"
+      orcid: https://orcid.org/0000-0002-5437-4652
+  title: "Modeling Sparse and Bursty Vulnerability Sightings: Forecasting Under Data Constraints"
   year: 2026
-  publisher: EasyChair
-  url: https://easychair.org/publications/preprint/dRz5
+  publisher: arXiv
+  url: https://arxiv.org/abs/2604.16038
 

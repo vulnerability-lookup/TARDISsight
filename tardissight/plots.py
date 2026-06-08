@@ -215,6 +215,17 @@ def fig_pooling_crps_vs_window(out: Path, records_csv: Path) -> None:
     )
 
 
+def fig_scale_crps_vs_window(out: Path, records_csv: Path) -> None:
+    """Scale-validation figure: same pooling comparison on the 200-CVE corpus."""
+    _crps_vs_window(
+        records_csv,
+        ["rolling_mean", "indep_hurdle_nb", "hier_hurdle"],
+        "Pooling holds at scale (200 CVEs)",
+        out / "scale_crps_vs_window.png",
+        "run run_pooling on data/large_corpus.json with --out results/scale",
+    )
+
+
 def fig_typed_priors(out: Path, priors_csv: Path) -> None:
     """Per-type population priors — characterises how the sighting types differ."""
     if not priors_csv.exists():
@@ -499,6 +510,7 @@ def main() -> None:
     fig_tier1_model_ranking(args.out, args.results / "backtest_summary.csv")
     fig_tier1_crps_per_cve(args.out, args.results / "backtest_crps_per_cve.csv")
     fig_pooling_crps_vs_window(args.out, args.results / "pooling_records.csv")
+    fig_scale_crps_vs_window(args.out, args.results / "scale" / "pooling_records.csv")
     fig_forecast_example(args.out, args.example_cve)
     fig_typed_priors(args.out, args.results / "typed_priors.csv")
     fig_typed_exploited_crps(args.out, args.results / "typed_exploited_records.csv")

@@ -57,11 +57,13 @@ MODEL_COLORS = {
 MODEL_COLORS["hier_exploited"] = "#0072B2"
 MODEL_COLORS["typed_sum"] = "#0072B2"
 MODEL_COLORS["pooled_total"] = "#D55E00"
+MODEL_COLORS["zinb_hier"] = "#117733"
 MODEL_LABELS = {
     "hier_hurdle": "Hierarchical hurdle (pooled)",
     "hier_exploited": "Pooled (type-specific prior)",
     "indep_hurdle_nb": "Hurdle NB (unpooled)",
     "rolling_mean": "Rolling mean",
+    "zinb_hier": "Zero-inflated NB (pooled)",
     "typed_sum": "Typed decomposition (sum)",
     "pooled_total": "Single pooled total",
 }
@@ -321,6 +323,38 @@ def fig_forecast_example(out: Path, cve: str, window: int = 14, horizon: int = 7
     plt.close(fig)
 
 
+def fig_zinb_comparison(out: Path, records_csv: Path, pit_csv: Path) -> None:
+    """Tier-5 figure: CRPS (left) and PIT calibration (right) vs window for the
+    zero-inflated NB, the empirical-Bayes hurdle, and the unpooled model."""
+    if not records_csv.exists() or not pit_csv.exists():
+        print(f"  skip zinb_comparison: {records_csv}/{pit_csv} not found (run `python -m tardissight.eval.run_zeroinflated`)")
+        return
+    models = ["indep_hurdle_nb", "zinb_hier", "hier_hurdle"]
+    crps = pd.read_csv(records_csv).groupby(["model", "window"])["crps"].mean().unstack("model")
+    pit = pd.read_csv(pit_csv, index_col=0)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4.6))
+    for model in models:
+        if model in crps.columns:
+            ax1.plot(crps.index, crps[model], "-o", color=MODEL_COLORS.get(model, "#777"),
+                     label=MODEL_LABELS.get(model, model), linewidth=2)
+        if model in pit.index:
+            cols = [int(c) for c in pit.columns]
+            ax2.plot(cols, pit.loc[model].to_numpy(), "-o", color=MODEL_COLORS.get(model, "#777"),
+                     label=MODEL_LABELS.get(model, model), linewidth=2)
+    ax1.set_xlabel("training-window size (days)")
+    ax1.set_ylabel("CRPS (lower is better)")
+    ax1.set_title("Accuracy")
+    ax2.set_xlabel("training-window size (days)")
+    ax2.set_ylabel("PIT calibration error (lower is better)")
+    ax2.set_title("Calibration")
+    ax2.legend(frameon=False)
+    fig.suptitle("Tier 5: a zero-inflated likelihood does not beat the hurdle")
+    fig.tight_layout()
+    fig.savefig(out / "zinb_comparison.png")
+    plt.close(fig)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=Path("docs/img/eval"))
@@ -340,6 +374,7 @@ def main() -> None:
     fig_typed_priors(args.out, args.results / "typed_priors.csv")
     fig_typed_exploited_crps(args.out, args.results / "typed_exploited_records.csv")
     fig_typed_lead_lag(args.out, args.results / "typed_lead_lag.csv")
+    fig_zinb_comparison(args.out, args.results / "zinb_records.csv", args.results / "zinb_pit_by_window.csv")
 
     print("Done.")
 

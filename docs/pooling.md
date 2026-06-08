@@ -83,6 +83,8 @@ any sighting), mean burst rate **2.137** sightings per active day, pooled NB
 dispersion **alpha = 4.52** (strong over-dispersion — quantitative justification
 for NB over Poisson at the population level).
 
+![CRPS vs training-window size](img/eval/pooling_crps_vs_window.png)
+
 **CRPS by training-window size** (lower is better):
 
 | model | W=5 | W=7 | W=10 | W=14 | W=21 | W=30 |
@@ -102,6 +104,14 @@ for NB over Poisson at the population level).
 80% interval coverage is ~0.94–0.97 for all models (over-covering the nominal
 0.80 — the structural-zeros inflation already noted in Tier 1; PIT is the
 reliable calibration gauge).
+
+A single forecast makes the mechanism concrete. Trained on a 14-day window that
+*ends in a burst*, the pooled model shrinks its expectation toward the population
+(correctly anticipating the fade to near-zero that follows), while the unpooled
+hurdle stays high and opens a very wide interval — the count-model echo of the
+first paper's "exploding CI":
+
+![Example probabilistic forecast](img/eval/forecast_example.png)
 <!-- RESULTS-END -->
 
 ## Findings

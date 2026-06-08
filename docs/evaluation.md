@@ -19,6 +19,10 @@ improvement helps. To make defensible claims in the next paper we need:
 3. concrete model improvements aimed at the failure modes the first paper
    documented — **over-dispersion** and **excess zeros**.
 
+The data itself motivates the difficulty — sparse, spiky, and short:
+
+![Daily sightings for example CVEs](img/eval/sightings_examples.png)
+
 ## Design choices
 
 ### Probabilistic forecasts as samples
@@ -92,6 +96,7 @@ metrics. The magnitude of the effect is itself a finding (see below).
 ```bash
 python -m tardissight.eval.run            # cached corpus snapshot
 python -m tardissight.eval.run --refresh  # re-fetch sightings from the API
+python -m tardissight.plots               # regenerate all figures into docs/img/eval/
 ```
 
 Raw API responses are cached under `data/sightings_cache/` so a result can be
@@ -116,6 +121,10 @@ Corpus snapshot (6 CVEs; one, CVE-2024-9164, has only 11 days and produces no
 | CVE-2024-9164 | 11 | 3 | 7 |
 | CVE-2025-54236 | 269 | 25 | 61 |
 | CVE-2025-8088 | 302 | 54 | 312 |
+
+![Tier-1 model ranking](img/eval/tier1_model_ranking.png)
+
+![Tier-1 CRPS per CVE](img/eval/tier1_crps_per_cve.png)
 
 **Pooled comparison** (origin-weighted; `horizon=7`, `min_train=10`, `stride=1`,
 `n_samples=2000`; 2296 forecasts/model). Sorted by CRPS, lower is better.

@@ -461,13 +461,28 @@ survives at larger scale. We therefore repeated the data-starvation backtest on 
 much larger set of \textbf{200 CVEs}---the most-sighted vulnerabilities of
 2010--2026, drawn programmatically from the Vulnerability-Lookup statistics API and
 spanning sixteen years and a wide range of activity profiles. The ranking is
-unchanged: the pooled hierarchical hurdle has the lowest CRPS at \emph{every}
-window---e.g.\ $0.127$ at $W{=}5$ and $0.098$ at $W{=}30$, versus $0.167$/$0.116$
-for the unpooled hurdle and $0.176$/$0.121$ for the rolling mean (a $16$--$28\%$
-reduction), and PIT calibration remains competitive. The advantage of borrowing
+unchanged (\Cref{tab:scale}): the pooled hierarchical hurdle has the lowest CRPS at
+\emph{every} window, beating the unpooled hurdle and the rolling-mean baseline by
+$16$--$28\%$, and PIT calibration remains competitive. The advantage of borrowing
 strength is therefore not an artefact of the small corpus; it persists, with the
 same ordering, across an order of magnitude more vulnerabilities. (The eight-fold
 larger corpus and its builder are released with the code.)
+
+\begin{table}[H]
+\centering
+\caption{Scale check --- CRPS by training-window size $W$ on the 200-CVE corpus
+(2010--2026). Lower is better; compare \Cref{tab:pooling} (24 CVEs).}
+\label{tab:scale}
+\begin{tabular}{lrrrrrr}
+\toprule
+model & $W$=5 & 7 & 10 & 14 & 21 & 30 \\
+\midrule
+\textbf{hier\_hurdle} (pooled)   & \textbf{0.127} & \textbf{0.111} & \textbf{0.101} & \textbf{0.098} & \textbf{0.091} & \textbf{0.098} \\
+indep\_hurdle\_nb (unpooled)     & 0.167 & 0.155 & 0.142 & 0.131 & 0.114 & 0.116 \\
+rolling\_mean                    & 0.176 & 0.170 & 0.154 & 0.140 & 0.120 & 0.121 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Robustness: is a richer model worth it?}\label{sec:bayes}
 Before accepting the empirical-Bayes hurdle, we stress-test it from two angles:

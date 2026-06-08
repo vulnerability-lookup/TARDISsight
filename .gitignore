@@ -38,3 +38,8 @@ vulntrain/config/conf.py
 vulnerability/
 results/
 
+# Sightings cache: the 24-CVE paper corpus is already tracked; the larger
+# scale-validation corpus (hundreds of CVEs) is regenerable via
+# scripts/build_large_corpus.py + data/large_corpus.json, so ignore the rest.
+data/sightings_cache/
+

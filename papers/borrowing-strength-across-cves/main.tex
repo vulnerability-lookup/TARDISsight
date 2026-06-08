@@ -244,10 +244,18 @@ identically.
 
 \paragraph{Rolling-origin backtesting.} Because series are short, a single
 train/test split would confound model quality with the accident of where the split
-falls. We instead slide the forecast origin forward one day at a time: at origin
-$t$ the model is fit on observations $1{:}t$ and scored on $t{+}1{:}t{+}H$. Only
-past data is ever used, and each CVE yields many scored forecasts, so comparisons
-rest on a distribution of errors.
+falls. We instead slide the forecast origin one day at a time; at each origin the
+model is fit on the training data up to that day and scored on the next $H$ days,
+so only past data is ever used and comparisons rest on a distribution of errors.
+We use the protocol in two variants. \emph{Experiment~1} (\Cref{sec:tier1}) ranks
+the single-series models with an \emph{expanding} window---fitting on all
+observations $1{:}t$ (minimum 10 days)---over each CVE's natural history. The
+pooling experiments (\Cref{sec:pooling} onward) instead use a \emph{fixed} trailing
+window of $W$ days and sweep $W$, in order to probe the data-scarcity axis directly.
+In both, the origin advances by one day; we draw $S=1000$ predictive sample paths
+($2000$ in Experiment~1) and, to bound compute on long histories, cap the scored
+origins per series at~40. The point summary, where one is needed (RMSSE), is the
+predictive median.
 
 \paragraph{Scoring rules.} For predictive samples $\{x^{(s)}_h\}_{s=1}^{S}$ and
 realised count $y_h$ at horizon step $h$, we report:
@@ -259,7 +267,8 @@ realised count $y_h$ at horizon step $h$, we report:
   \end{equation}
   which generalises absolute error to distributions and is in the units of the
   data (sightings/day);
-  \item \textbf{quantile (pinball) loss} averaged over a grid of levels;
+  \item \textbf{quantile (pinball) loss} averaged over the levels
+  $\{0.1, 0.25, 0.5, 0.75, 0.9\}$;
   \item \textbf{RMSSE} \cite{makridakis2022m5}, the point error scaled by the
   in-sample one-step naive error, which is unit-free and comparable across CVEs;
   \item \textbf{interval coverage} at the 50/80/95\% levels; and
@@ -386,8 +395,8 @@ treatment (\Cref{sec:future}).
 To isolate the effect pooling should have---helping when data is scarce---we
 restrict every model to a fixed trailing window of $W$ days and sweep $W$ from 5 to
 30. The population prior is estimated \emph{leave-one-out}: when forecasting CVE
-$c$ it uses only the \emph{other} CVEs' histories, mirroring the realistic setting
-in which a new CVE arrives against an existing back-catalogue. We compare the
+$c$ it uses only the \emph{other} CVEs' full histories, mirroring the realistic
+setting in which a new CVE arrives against an existing back-catalogue. We compare the
 hierarchical hurdle against its unpooled counterpart---a constant-rate NB hurdle
 (\texttt{indep\_hurdle\_nb}) that combines Experiment~1's two lessons, that the NB
 hurdle calibrates best and that the time trend is harmful---and the rolling-mean
@@ -640,7 +649,8 @@ wanted.}
 
 \begin{table}[H]
 \centering
-\caption{Total-count CRPS: typed decomposition versus single pooled model.}
+\caption{Total-count CRPS at windows 7, 14, and 30: typed decomposition versus
+single pooled model.}
 \label{tab:decomp}
 \begin{tabular}{lrrr}
 \toprule

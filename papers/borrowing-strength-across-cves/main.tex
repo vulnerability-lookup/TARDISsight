@@ -207,7 +207,8 @@ Each record carries a creation timestamp, a \texttt{type} (see
 \Cref{sec:typed}), and a source. For a given CVE we aggregate records into a
 gap-free daily count series, filling days with no sightings with explicit zeros so
 that the calendar is regular. The forecasting target is the next $H$ daily counts
-($H=7$ throughout).
+($H=7$ in all backtests; the illustrative forecasts of \Cref{sec:showcase} use a
+longer 14-day horizon for readability).
 
 \paragraph{Corpus.} To study both the data-scarce and data-rich regimes, and to
 provide a credible \emph{population} for pooling, we assemble 24 CVEs: the cases
@@ -299,8 +300,9 @@ time-trend (\texttt{trend}) variant, the latter matching the
 backtest can decide whether the trend earns its keep.
 
 \section{Experiment 1: Which Single-Series Model?}\label{sec:tier1}
-We backtest all models on five CVEs with sufficient history (origin-weighted, 2296
-forecasts per model). \Cref{tab:tier1} and \Cref{fig:tier1} report the result.
+We backtest all models on the first paper's CVEs---five of which have enough
+history for the expanding-window backtest---origin-weighted over 2296 forecasts per
+model. \Cref{tab:tier1} and \Cref{fig:tier1} report the result.
 
 \begin{table}[H]
 \centering
@@ -336,8 +338,10 @@ Four findings stand out.
 \textbf{(i) Simple baselines are hard to beat}: the 7-day rolling mean has the
 lowest CRPS, confirming---now by measurement---the first paper's qualitative remark
 that simple averages outperform elaborate time-series models here.
-\textbf{(ii) Negative Binomial beats Poisson} at every level, validating the
-over-dispersion fix.
+\textbf{(ii) Negative Binomial beats Poisson} for the well-behaved models---the
+hurdle (0.308 vs.\ 0.321) and the constant-rate GLM (0.377 vs.\ 0.579)---validating
+the over-dispersion fix; the sole exception is the trend variant, where NB's
+heavier tail makes the runaway extrapolation of finding~(iv) even worse.
 \textbf{(iii) The hurdle Negative-Binomial is the best-calibrated model} by a wide
 margin (PIT error 0.071 versus 0.282 for plain Poisson). When trustworthy
 prediction intervals matter more than a marginally sharper median---the operational
@@ -384,8 +388,10 @@ restrict every model to a fixed trailing window of $W$ days and sweep $W$ from 5
 30. The population prior is estimated \emph{leave-one-out}: when forecasting CVE
 $c$ it uses only the \emph{other} CVEs' histories, mirroring the realistic setting
 in which a new CVE arrives against an existing back-catalogue. We compare the
-hierarchical hurdle against the best unpooled model from Experiment~1
-(\texttt{indep\_hurdle\_nb}) and the rolling-mean baseline.
+hierarchical hurdle against its unpooled counterpart---a constant-rate NB hurdle
+(\texttt{indep\_hurdle\_nb}) that combines Experiment~1's two lessons, that the NB
+hurdle calibrates best and that the time trend is harmful---and the rolling-mean
+baseline.
 
 \subsection{Results}
 \Cref{fig:pooling} and \Cref{tab:pooling} show that the hierarchical model has the
@@ -423,8 +429,8 @@ rolling\_mean                    & 0.320 & 0.325 & 0.298 & 0.253 & 0.231 & 0.202
 
 A useful way to read \Cref{tab:pooling} is as \textbf{data efficiency}: the pooled
 model with only 10 days of history (0.187) already beats the unpooled hurdle with
-30 days (0.198), and at 7 days it matches the unpooled model at 30 days. Pooling
-reaches in roughly a week what an isolated model does not reach in a month.
+30 days (0.198), and at 7 days it nearly matches it (0.204 vs.\ 0.198). Pooling
+reaches in about ten days what an isolated model does not reach in a month.
 \Cref{fig:forecast} makes the mechanism concrete on a single forecast: trained on a
 window ending in a burst, the pooled model shrinks its expectation toward the
 population and anticipates the fade, whereas the unpooled hurdle stays high and

@@ -85,8 +85,9 @@ the root cause---per-CVE data scarcity---with \emph{hierarchical (partial)
 pooling}: each CVE's activity and burst parameters are shrunk toward a population
 distribution estimated from a back-catalogue of past CVEs. This dominates both
 the strong rolling-mean baseline and the best unpooled model at every
-training-window size and yields roughly a threefold improvement in data
-efficiency; two robustness checks---a fully Bayesian treatment and a zero-inflated
+training-window size, yields roughly a threefold improvement in data
+efficiency, and continues to hold on a larger 200-CVE corpus; two robustness
+checks---a fully Bayesian treatment and a zero-inflated
 likelihood---confirm that this inexpensive empirical-Bayes pooling is already
 sufficient, as the binding constraint is over-dispersion rather than parameter
 uncertainty or the choice of marginal count distribution. Finally, we model
@@ -146,7 +147,8 @@ advance. Our contributions are:
   parameters as draws from a population distribution learned from past CVEs and
   shrink accordingly. This dominates every alternative at all training-window
   sizes and gives roughly a $3\times$ data-efficiency gain---directly addressing
-  the scarcity that defeated the first paper. We use empirical Bayes and show, via
+  the scarcity that defeated the first paper---and it replicates on a 200-CVE
+  corpus, ruling out a small-sample artefact. We use empirical Bayes and show, via
   two robustness checks---a fully Bayesian treatment and a zero-inflated
   likelihood---that it is sufficient: neither richer inference nor a different
   marginal count distribution improves forecasts in this over-dispersed regime.
@@ -463,7 +465,7 @@ much larger set of \textbf{200 CVEs}---the most-sighted vulnerabilities of
 spanning sixteen years and a wide range of activity profiles. The ranking is
 unchanged (\Cref{tab:scale,fig:scale}): the pooled hierarchical hurdle has the lowest CRPS at
 \emph{every} window, beating the unpooled hurdle and the rolling-mean baseline by
-$16$--$28\%$, and PIT calibration remains competitive. The advantage of borrowing
+$16$--$35\%$ in CRPS, and PIT calibration remains competitive. The advantage of borrowing
 strength is therefore not an artefact of the small corpus; it persists, with the
 same ordering, across an order of magnitude more vulnerabilities. (The eight-fold
 larger corpus and its builder are released with the code.)

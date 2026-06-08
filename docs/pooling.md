@@ -139,9 +139,12 @@ first paper's "exploding CI":
    extreme `W=5` it is slightly less calibrated than the rolling mean (0.113 vs
    0.063) — when almost completely starved the forecast is prior-dominated and a
    touch over-confident — yet its CRPS is far lower, i.e. it is sharper and only
-   marginally less calibrated. A full Bayesian treatment (propagating
-   hyperparameter uncertainty) would likely close this small `W=5` calibration
-   gap.
+   marginally less calibrated. We initially expected a full Bayesian treatment
+   (propagating hyperparameter uncertainty) to close this small `W=5` gap;
+   Tier 4 ([`bayesian.md`](bayesian.md)) tested this and found the opposite — the
+   binding problem here is *over*-coverage, so adding uncertainty widens the
+   already-too-wide intervals and slightly hurts. Empirical Bayes is the sweet
+   spot.
 
 ### Takeaway for the paper
 
@@ -150,9 +153,10 @@ short-series regime: a hierarchical hurdle Negative-Binomial dominates both the
 best unpooled count model and the strong rolling-mean baseline across all
 training-window sizes, with the largest gains exactly where the first paper
 struggled (very little per-CVE data). The empirical-Bayes prototype is enough to
-establish this; the natural next step is a full Bayesian hierarchical model for
-proper uncertainty, and adding time-varying covariates (day-of-week, EPSS
-dynamics) and sighting `type` as a second pooled dimension.
+establish this — and, as Tier 4 shows, enough *full stop*: a fully Bayesian
+version does not improve on it here. Other directions explored in later tiers are
+sighting `type` as a separate pooled dimension ([`typed.md`](typed.md)) and the
+Bayesian comparison ([`bayesian.md`](bayesian.md)).
 
 ### Prototype limitations (to address before publication)
 

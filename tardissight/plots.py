@@ -57,6 +57,7 @@ MODEL_COLORS = {
 MODEL_COLORS["hier_exploited"] = "#0072B2"
 MODEL_COLORS["typed_sum"] = "#0072B2"
 MODEL_COLORS["pooled_total"] = "#D55E00"
+MODEL_COLORS["bayes_hurdle"] = "#CC79A7"
 MODEL_LABELS = {
     "hier_hurdle": "Hierarchical hurdle (pooled)",
     "hier_exploited": "Pooled (type-specific prior)",
@@ -64,6 +65,7 @@ MODEL_LABELS = {
     "rolling_mean": "Rolling mean",
     "typed_sum": "Typed decomposition (sum)",
     "pooled_total": "Single pooled total",
+    "bayes_hurdle": "Full Bayesian (pooled)",
 }
 
 # Colourblind-friendly colours per sighting type.
@@ -246,6 +248,38 @@ def fig_typed_exploited_crps(out: Path, records_csv: Path) -> None:
     )
 
 
+def fig_bayes_calibration(out: Path, records_csv: Path, pit_csv: Path) -> None:
+    """Tier-4 figure: CRPS (left) and PIT calibration error (right) vs window for
+    full-Bayesian, empirical-Bayes, and unpooled models."""
+    if not records_csv.exists() or not pit_csv.exists():
+        print(f"  skip bayes_calibration: {records_csv}/{pit_csv} not found (run `python -m tardissight.eval.run_bayes`)")
+        return
+    models = ["indep_hurdle_nb", "hier_hurdle", "bayes_hurdle"]
+    crps = pd.read_csv(records_csv).groupby(["model", "window"])["crps"].mean().unstack("model")
+    pit = pd.read_csv(pit_csv, index_col=0)  # index=model, columns=window
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4.6))
+    for model in models:
+        if model in crps.columns:
+            ax1.plot(crps.index, crps[model], "-o", color=MODEL_COLORS.get(model, "#777"),
+                     label=MODEL_LABELS.get(model, model), linewidth=2)
+        if model in pit.index:
+            cols = [int(c) for c in pit.columns]
+            ax2.plot(cols, pit.loc[model].to_numpy(), "-o", color=MODEL_COLORS.get(model, "#777"),
+                     label=MODEL_LABELS.get(model, model), linewidth=2)
+    ax1.set_xlabel("training-window size (days)")
+    ax1.set_ylabel("CRPS (lower is better)")
+    ax1.set_title("Accuracy")
+    ax2.set_xlabel("training-window size (days)")
+    ax2.set_ylabel("PIT calibration error (lower is better)")
+    ax2.set_title("Calibration")
+    ax2.legend(frameon=False)
+    fig.suptitle("Tier 4: empirical Bayes is sufficient — full hyperparameter uncertainty does not help")
+    fig.tight_layout()
+    fig.savefig(out / "bayes_calibration.png")
+    plt.close(fig)
+
+
 def fig_typed_lead_lag(out: Path, lead_lag_csv: Path) -> None:
     """Cross-correlation of precursor types with exploited activity vs lag."""
     if not lead_lag_csv.exists():
@@ -340,6 +374,7 @@ def main() -> None:
     fig_typed_priors(args.out, args.results / "typed_priors.csv")
     fig_typed_exploited_crps(args.out, args.results / "typed_exploited_records.csv")
     fig_typed_lead_lag(args.out, args.results / "typed_lead_lag.csv")
+    fig_bayes_calibration(args.out, args.results / "bayes_records.csv", args.results / "bayes_pit_by_window.csv")
 
     print("Done.")
 

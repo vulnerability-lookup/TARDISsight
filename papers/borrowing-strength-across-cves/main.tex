@@ -86,7 +86,10 @@ pooling}: each CVE's activity and burst parameters are shrunk toward a populatio
 distribution estimated from a back-catalogue of past CVEs. This dominates both
 the strong rolling-mean baseline and the best unpooled model at every
 training-window size and yields roughly a threefold improvement in data
-efficiency. Finally, we model sighting \emph{type}: pooling cleanly forecasts the
+efficiency; a fully Bayesian version confirms that this inexpensive empirical-Bayes
+pooling is already sufficient, as the binding constraint is over-dispersion rather
+than parameter uncertainty. Finally, we model sighting \emph{type}: pooling cleanly
+forecasts the
 operationally high-value \emph{exploited} signal, although decomposing the total
 by type does not help the aggregate, and---contrary to intuition---open-source
 proof-of-concept and ``seen'' activity \emph{co-move} with exploitation rather
@@ -142,7 +145,9 @@ advance. Our contributions are:
   parameters as draws from a population distribution learned from past CVEs and
   shrink accordingly. This dominates every alternative at all training-window
   sizes and gives roughly a $3\times$ data-efficiency gain---directly addressing
-  the scarcity that defeated the first paper.
+  the scarcity that defeated the first paper. We use empirical Bayes and show, via
+  a fully Bayesian comparison, that it is sufficient: propagating hyperparameter
+  uncertainty does not improve forecasts in this over-dispersed regime.
 
   \item \textbf{Type-aware forecasting} (\Cref{sec:typed}), realising a stated
   goal of the first paper. Pooling the \emph{exploited} stream forecasts that
@@ -433,6 +438,64 @@ versus unpooled (right).}
 \label{fig:forecast}
 \end{figure}
 
+\subsection{Is full Bayesian inference worth it?}\label{sec:bayes}
+Our pooling uses empirical Bayes: the population hyperparameters
+$(a,b,\kappa,\theta)$ are point estimates. A natural concern is that ignoring
+their uncertainty makes the forecasts over-confident, especially at the shortest
+windows. We tested this with a \emph{fully Bayesian} variant. Conjugacy makes it
+cheap and dependency-free: the per-CVE parameters integrate out in closed form
+(the activity marginal is Beta--Binomial, the burst marginal Negative-Binomial),
+leaving only the four hyperparameters, whose joint posterior we sample with a
+short random-walk Metropolis chain in numpy/scipy---no probabilistic-programming
+framework. Forecasts then propagate three layers of uncertainty: the
+hyperparameter posterior, the per-CVE conjugate posterior, and count sampling.
+The sampler is correct: its posterior means coincide with the empirical-Bayes
+estimates (mean activity $0.220$, 95\% credible interval $0.15$--$0.30$; mean
+burst rate $2.17$), now with intervals attached.
+
+Yet the fully Bayesian forecasts are \emph{slightly worse} than empirical Bayes on
+both CRPS and PIT calibration at every window (\Cref{tab:bayes,fig:bayes}). The
+reason is diagnostic rather than incidental. On these zero-dominated series every
+model already \emph{over-covers}---empirical 80\% interval coverage is
+$\approx 0.96$ against the nominal $0.80$---so the predictive distributions are
+too \emph{wide}, not too narrow. Propagating additional hyperparameter uncertainty
+can only widen them further, moving coverage away from nominal and reducing
+sharpness. The binding constraint in this regime is \emph{excess dispersion}, not
+the parameter uncertainty that a Bayesian treatment would remedy. We therefore
+conclude that the inexpensive empirical-Bayes scheme is the right choice here, and
+that the productive next step is a \emph{tighter likelihood}---modelling the
+dependence between the activity and burst components, or a zero-inflated
+formulation---rather than heavier inference. The Bayesian machinery remains useful
+where one specifically wants calibrated credible intervals on the population
+parameters themselves.
+
+\begin{table}[H]
+\centering
+\caption{Empirical-Bayes vs fully Bayesian pooling vs the best unpooled model:
+CRPS and PIT calibration error at selected windows. Lower is better for both.}
+\label{tab:bayes}
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{3}{c}{CRPS} & \multicolumn{3}{c}{PIT cal.\ error} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+model & $W$=5 & 14 & 30 & $W$=5 & 14 & 30 \\
+\midrule
+\textbf{hier\_hurdle} (empirical Bayes) & \textbf{0.221} & \textbf{0.166} & \textbf{0.148} & \textbf{0.113} & \textbf{0.067} & \textbf{0.065} \\
+bayes\_hurdle (full Bayesian)           & 0.229 & 0.197 & 0.167 & 0.146 & 0.089 & 0.073 \\
+indep\_hurdle\_nb (unpooled)            & 0.293 & 0.233 & 0.198 & 0.093 & 0.081 & 0.105 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/bayes_calibration.png}
+\caption{Accuracy (CRPS, left) and calibration (PIT error, right) versus
+training-window size. The fully Bayesian model does not improve on empirical
+Bayes; on this over-covering data, propagating more uncertainty hurts.}
+\label{fig:bayes}
+\end{figure}
+
 \section{Type-Aware Forecasting}\label{sec:typed}
 The first paper noted that treating all sightings as equivalent discards
 information, and proposed modelling their \emph{type} to link activity to actual
@@ -552,14 +615,17 @@ off an all-types total. (5) Treat raw interval coverage with suspicion on sparse
 counts and rely on PIT-based calibration.
 
 \section{Limitations and Future Work}\label{sec:future}
-Our hierarchical model is an empirical-Bayes prototype: it uses point
-hyperparameters and so does not propagate hyperparameter uncertainty, it shares a
-single pooled burst dispersion rather than a per-CVE random effect, and it pools
-the activity and burst components independently. A fully Bayesian multilevel
-formulation \cite{gelman2007data} would address all three and likely close the
-small residual mis-calibration at the shortest windows. In the typed model the
-per-type streams are sampled independently; modelling their correlation (PoC and
-exploitation do co-occur) is a natural next step that could improve the aggregate.
+Our pooled model shares a single burst dispersion rather than a per-CVE random
+effect and pools the activity and burst components independently. Notably, the
+limitation one might expect to matter most---the empirical-Bayes use of point
+hyperparameters---turns out not to: the fully Bayesian comparison of
+\Cref{sec:bayes} shows that propagating hyperparameter uncertainty does not help,
+because the binding problem is over-dispersion, not parameter uncertainty. The
+clear implication is that the next gains lie in a \emph{tighter likelihood}. Two
+concrete routes: a zero-inflated rather than hurdle formulation, and---in the
+typed model, where the per-type streams are currently sampled independently---%
+explicitly modelling the dependence between activity and burst (and between PoC
+and exploitation, which do co-occur), which could sharpen the aggregate.
 The lead--lag analysis uses daily counts; a point-process treatment on raw
 timestamps would test precedence more rigorously. Finally, time-varying covariates
 with genuine variation---day-of-week effects, and EPSS
@@ -579,10 +645,13 @@ attacked not by a cleverer single-series model but by \emph{borrowing strength
 across vulnerabilities}: a hierarchical model that shrinks each CVE toward a
 population of past CVEs dominates all alternatives and roughly triples data
 efficiency, including for the high-value exploited signal. Along the way we report
-two findings that temper intuition: decomposing sightings by type does not improve
-the aggregate forecast, and open-source proof-of-concept activity does not cleanly
-precede exploitation in this data. We release all code, data, and figures to
-support reproducibility and further work.
+three findings that temper intuition: a fully Bayesian treatment does not beat the
+cheap empirical-Bayes pooling (the limiting factor is over-dispersion, not
+parameter uncertainty), decomposing sightings by type does not improve the
+aggregate forecast, and open-source proof-of-concept activity does not cleanly
+precede exploitation in this data. Each points the same way---toward tighter
+likelihoods and richer dependence structure rather than heavier machinery. We
+release all code, data, and figures to support reproducibility and further work.
 
 \section*{Reproducibility}
 The implementation (data access, models built on statsmodels

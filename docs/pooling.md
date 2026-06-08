@@ -158,6 +158,30 @@ version does not improve on it here. Other directions explored in later tiers ar
 sighting `type` as a separate pooled dimension ([`typed.md`](typed.md)) and the
 Bayesian comparison ([`bayesian.md`](bayesian.md)).
 
+### Scale validation (200 CVEs)
+
+To check the result is not an artefact of the 24-CVE corpus, the data-starvation
+backtest was re-run on **200 CVEs** — the most-sighted vulnerabilities of 2010–2026
+pulled via `scripts/build_large_corpus.py` (Vulnerability-Lookup `most_sighted`
+endpoint, unioned across date windows; list in `data/large_corpus.json`). Run:
+
+```bash
+python -m tardissight.eval.run_pooling --cves $(python -c "import json;print(' '.join(json.load(open('data/large_corpus.json'))))") --out results/scale 2>/dev/null
+```
+
+The ranking is unchanged — pooled < unpooled < rolling at every window:
+
+| model | W=5 | W=7 | W=10 | W=14 | W=21 | W=30 |
+|---|---:|---:|---:|---:|---:|---:|
+| **hier_hurdle** (pooled) | **0.127** | **0.111** | **0.101** | **0.098** | **0.091** | **0.098** |
+| indep_hurdle_nb (unpooled) | 0.167 | 0.155 | 0.142 | 0.131 | 0.114 | 0.116 |
+| rolling_mean | 0.176 | 0.170 | 0.154 | 0.140 | 0.120 | 0.121 |
+
+The pooled hurdle wins at every window by ~16–28% CRPS; PIT calibration stays
+competitive (~0.04–0.07). The 200-CVE population prior is less over-dispersed
+(α≈0.93 vs 4.52 on the 24-CVE set) because the larger set includes many steady,
+scanner-driven CVEs — but the pooling advantage is unaffected.
+
 ### Prototype limitations (to address before publication)
 
 - Empirical Bayes uses point hyperparameters (no uncertainty propagation).

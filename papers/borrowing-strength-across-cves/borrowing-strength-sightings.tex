@@ -455,6 +455,20 @@ versus unpooled (right).}
 \label{fig:forecast}
 \end{figure}
 
+\subsection{Does it hold at scale?}\label{sec:scale}
+A 24-CVE corpus is deliberately curated, and a fair question is whether the result
+survives at larger scale. We therefore repeated the data-starvation backtest on a
+much larger set of \textbf{200 CVEs}---the most-sighted vulnerabilities of
+2010--2026, drawn programmatically from the Vulnerability-Lookup statistics API and
+spanning sixteen years and a wide range of activity profiles. The ranking is
+unchanged: the pooled hierarchical hurdle has the lowest CRPS at \emph{every}
+window---e.g.\ $0.127$ at $W{=}5$ and $0.098$ at $W{=}30$, versus $0.167$/$0.116$
+for the unpooled hurdle and $0.176$/$0.121$ for the rolling mean (a $16$--$28\%$
+reduction), and PIT calibration remains competitive. The advantage of borrowing
+strength is therefore not an artefact of the small corpus; it persists, with the
+same ordering, across an order of magnitude more vulnerabilities. (The eight-fold
+larger corpus and its builder are released with the code.)
+
 \subsection{Robustness: is a richer model worth it?}\label{sec:bayes}
 Before accepting the empirical-Bayes hurdle, we stress-test it from two angles:
 richer \emph{inference} (a fully Bayesian treatment, \Cref{sec:bayes-full}) and a
@@ -755,6 +769,12 @@ effective data. (4) For exploitation-relevant alerting, forecast the
 \texttt{exploited} type directly with its own pooled model rather than reading it
 off an all-types total. (5) Treat raw interval coverage with suspicion on sparse
 counts and rely on PIT-based calibration.
+
+These are not purely theoretical recommendations. The first paper's models are
+already integrated into the production Vulnerability-Lookup instance operated by
+CIRCL, and the forecaster described here---validated at the 200-CVE scale of
+\Cref{sec:scale}---is being integrated into the same platform, where it will run
+over the full, continuously-updated sightings stream rather than a fixed corpus.
 
 \section{Limitations and Future Work}\label{sec:future}
 Our pooled model shares a single burst dispersion rather than a per-CVE random

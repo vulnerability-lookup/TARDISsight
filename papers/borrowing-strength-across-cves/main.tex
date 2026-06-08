@@ -86,10 +86,11 @@ pooling}: each CVE's activity and burst parameters are shrunk toward a populatio
 distribution estimated from a back-catalogue of past CVEs. This dominates both
 the strong rolling-mean baseline and the best unpooled model at every
 training-window size and yields roughly a threefold improvement in data
-efficiency; a fully Bayesian version confirms that this inexpensive empirical-Bayes
-pooling is already sufficient, as the binding constraint is over-dispersion rather
-than parameter uncertainty. Finally, we model sighting \emph{type}: pooling cleanly
-forecasts the
+efficiency; two robustness checks---a fully Bayesian treatment and a zero-inflated
+likelihood---confirm that this inexpensive empirical-Bayes pooling is already
+sufficient, as the binding constraint is over-dispersion rather than parameter
+uncertainty or the choice of marginal count distribution. Finally, we model
+sighting \emph{type}: pooling cleanly forecasts the
 operationally high-value \emph{exploited} signal, although decomposing the total
 by type does not help the aggregate, and---contrary to intuition---open-source
 proof-of-concept and ``seen'' activity \emph{co-move} with exploitation rather
@@ -146,8 +147,9 @@ advance. Our contributions are:
   shrink accordingly. This dominates every alternative at all training-window
   sizes and gives roughly a $3\times$ data-efficiency gain---directly addressing
   the scarcity that defeated the first paper. We use empirical Bayes and show, via
-  a fully Bayesian comparison, that it is sufficient: propagating hyperparameter
-  uncertainty does not improve forecasts in this over-dispersed regime.
+  two robustness checks---a fully Bayesian treatment and a zero-inflated
+  likelihood---that it is sufficient: neither richer inference nor a different
+  marginal count distribution improves forecasts in this over-dispersed regime.
 
   \item \textbf{Type-aware forecasting} (\Cref{sec:typed}), realising a stated
   goal of the first paper. Pooling the \emph{exploited} stream forecasts that
@@ -438,7 +440,13 @@ versus unpooled (right).}
 \label{fig:forecast}
 \end{figure}
 
-\subsection{Is full Bayesian inference worth it?}\label{sec:bayes}
+\subsection{Robustness: is a richer model worth it?}\label{sec:bayes}
+Before accepting the empirical-Bayes hurdle, we stress-test it from two angles:
+richer \emph{inference} (a fully Bayesian treatment, \Cref{sec:bayes-full}) and a
+richer zero-handling \emph{likelihood} (zero-inflation, \Cref{sec:zinb}). Neither
+improves on it.
+
+\subsubsection{Full Bayesian inference}\label{sec:bayes-full}
 Our pooling uses empirical Bayes: the population hyperparameters
 $(a,b,\kappa,\theta)$ are point estimates. A natural concern is that ignoring
 their uncertainty makes the forecasts over-confident, especially at the shortest
@@ -461,13 +469,11 @@ $\approx 0.96$ against the nominal $0.80$---so the predictive distributions are
 too \emph{wide}, not too narrow. Propagating additional hyperparameter uncertainty
 can only widen them further, moving coverage away from nominal and reducing
 sharpness. The binding constraint in this regime is \emph{excess dispersion}, not
-the parameter uncertainty that a Bayesian treatment would remedy. We therefore
-conclude that the inexpensive empirical-Bayes scheme is the right choice here, and
-that the productive next step is a \emph{tighter likelihood}---modelling the
-dependence between the activity and burst components, or a zero-inflated
-formulation---rather than heavier inference. The Bayesian machinery remains useful
-where one specifically wants calibrated credible intervals on the population
-parameters themselves.
+the parameter uncertainty that a Bayesian treatment would remedy. The inexpensive
+empirical-Bayes scheme is therefore the right choice for inference; the Bayesian
+machinery remains useful only where one wants calibrated credible intervals on the
+population parameters themselves. This points to a complementary question---is the
+\emph{likelihood} itself too loose?---which the next check addresses.
 
 \begin{table}[H]
 \centering
@@ -495,6 +501,69 @@ training-window size. The fully Bayesian model does not improve on empirical
 Bayes; on this over-covering data, propagating more uncertainty hurts.}
 \label{fig:bayes}
 \end{figure}
+
+\subsubsection{A zero-inflated likelihood}\label{sec:zinb}
+The over-coverage just diagnosed suggests the \emph{likelihood} may be too
+dispersed: the hurdle's positive part is a heavy-tailed $1+\mathrm{NB}$ with large
+pooled dispersion. A zero-inflated Negative-Binomial (ZINB) is the natural
+alternative---a single NB component generates the data, with an extra
+structural-zero gate, so the same (potentially tighter) NB explains both the small
+positive counts and some of the zeros:
+\begin{equation}
+  y = 0 \;\text{w.p.}\; \pi_c, \qquad y \sim \mathrm{NB2}(\mu_c, r) \;\text{w.p.}\; 1-\pi_c .
+\end{equation}
+We pool it identically ($\pi_c\sim\mathrm{Beta}$, $\mu_c\sim\mathrm{Gamma}$, shared
+$r$). ZINB does not factorise, so we fit the per-CVE $(\pi_c,\mu_c)$ by MAP
+expectation--maximisation with the population priors as pseudo-counts (again
+numpy/scipy only).
+
+The outcome separates cleanly into two observations (\Cref{tab:zinb,fig:zinb}).
+\emph{Pooling still helps}: the hierarchical ZINB beats the unpooled hurdle on
+CRPS at every window, so the negative result is about the likelihood, not pooling.
+\emph{But the zero-inflated likelihood is worse than the hurdle}---on CRPS at every
+window and, markedly, on calibration, where it is the worst of the three. Fit
+honestly the ZINB count component lands at $r\approx 1$ (geometric-like, still
+heavy-tailed), so it does not tighten the predictive; and where the hurdle exploits
+the well-defined ``active vs.\ silent'' distinction with a hard gate on observed
+activity, ZINB instead \emph{softly} attributes each zero between its two
+components, which is less efficient when the zeros are genuinely structural.
+
+\begin{table}[H]
+\centering
+\caption{Zero-inflated NB vs the empirical-Bayes hurdle vs the best unpooled
+model: CRPS and PIT calibration error at selected windows. Lower is better.}
+\label{tab:zinb}
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{3}{c}{CRPS} & \multicolumn{3}{c}{PIT cal.\ error} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+model & $W$=5 & 14 & 30 & $W$=5 & 14 & 30 \\
+\midrule
+\textbf{hier\_hurdle} (empirical Bayes) & \textbf{0.221} & \textbf{0.166} & \textbf{0.148} & \textbf{0.113} & \textbf{0.067} & \textbf{0.065} \\
+zinb\_hier (zero-inflated)              & 0.246 & 0.208 & 0.178 & 0.146 & 0.135 & 0.161 \\
+indep\_hurdle\_nb (unpooled)            & 0.293 & 0.233 & 0.198 & 0.093 & 0.081 & 0.105 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/zinb_comparison.png}
+\caption{Accuracy (left) and calibration (right) versus training-window size. The
+zero-inflated NB benefits from pooling (it beats the unpooled hurdle) but does not
+beat the empirical-Bayes hurdle, and is the least calibrated of the three.}
+\label{fig:zinb}
+\end{figure}
+
+\paragraph{Robustness, taken together.} Neither a fully Bayesian treatment nor a
+zero-inflated likelihood improves on the empirical-Bayes hurdle. We read this as
+evidence that the residual over-coverage is \emph{intrinsic} to forecasting such
+sparse, bursty counts at a short horizon---a discreteness/zero effect that inflates
+interval coverage regardless of the model---rather than a deficiency that richer
+inference or a different marginal count distribution can remove. The empirical-Bayes
+hierarchical hurdle is thus our recommended model, and the one remaining lever is to
+model the \emph{dependence} the present models omit (between activity and burst, and
+between sighting types; \Cref{sec:future}) rather than to elaborate the marginal.
 
 \section{Type-Aware Forecasting}\label{sec:typed}
 The first paper noted that treating all sightings as equivalent discards
@@ -616,16 +685,16 @@ counts and rely on PIT-based calibration.
 
 \section{Limitations and Future Work}\label{sec:future}
 Our pooled model shares a single burst dispersion rather than a per-CVE random
-effect and pools the activity and burst components independently. Notably, the
-limitation one might expect to matter most---the empirical-Bayes use of point
-hyperparameters---turns out not to: the fully Bayesian comparison of
-\Cref{sec:bayes} shows that propagating hyperparameter uncertainty does not help,
-because the binding problem is over-dispersion, not parameter uncertainty. The
-clear implication is that the next gains lie in a \emph{tighter likelihood}. Two
-concrete routes: a zero-inflated rather than hurdle formulation, and---in the
-typed model, where the per-type streams are currently sampled independently---%
-explicitly modelling the dependence between activity and burst (and between PoC
-and exploitation, which do co-occur), which could sharpen the aggregate.
+effect and pools the activity and burst components independently. Notably, the two
+limitations one might expect to matter most do not: \Cref{sec:bayes} shows that
+neither propagating hyperparameter uncertainty (a fully Bayesian treatment) nor
+adopting a zero-inflated likelihood improves on the empirical-Bayes hurdle, because
+the binding problem is over-dispersion intrinsic to the regime rather than
+parameter uncertainty or the marginal count distribution. The clear implication is
+that the remaining gains lie not in elaborating the marginal but in modelling the
+\emph{dependence} the present models omit: between the activity gate and the burst
+size, and---in the typed model, where the per-type streams are currently sampled
+independently---between PoC and exploitation, which do co-occur.
 The lead--lag analysis uses daily counts; a point-process treatment on raw
 timestamps would test precedence more rigorously. Finally, time-varying covariates
 with genuine variation---day-of-week effects, and EPSS
@@ -645,13 +714,14 @@ attacked not by a cleverer single-series model but by \emph{borrowing strength
 across vulnerabilities}: a hierarchical model that shrinks each CVE toward a
 population of past CVEs dominates all alternatives and roughly triples data
 efficiency, including for the high-value exploited signal. Along the way we report
-three findings that temper intuition: a fully Bayesian treatment does not beat the
-cheap empirical-Bayes pooling (the limiting factor is over-dispersion, not
-parameter uncertainty), decomposing sightings by type does not improve the
+several findings that temper intuition: neither a fully Bayesian treatment nor a
+zero-inflated likelihood beats the cheap empirical-Bayes pooling (the limiting
+factor is over-dispersion intrinsic to the regime, not parameter uncertainty or
+the marginal distribution), decomposing sightings by type does not improve the
 aggregate forecast, and open-source proof-of-concept activity does not cleanly
-precede exploitation in this data. Each points the same way---toward tighter
-likelihoods and richer dependence structure rather than heavier machinery. We
-release all code, data, and figures to support reproducibility and further work.
+precede exploitation in this data. Each points the same way---toward richer
+\emph{dependence} structure rather than heavier machinery or a different marginal.
+We release all code, data, and figures to support reproducibility and further work.
 
 \section*{Reproducibility}
 The implementation (data access, models built on statsmodels

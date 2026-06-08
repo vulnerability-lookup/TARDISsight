@@ -505,7 +505,7 @@ def main() -> None:
     fig_typed_lead_lag(args.out, args.results / "typed_lead_lag.csv")
     fig_bayes_calibration(args.out, args.results / "bayes_records.csv", args.results / "bayes_pit_by_window.csv")
     fig_zinb_comparison(args.out, args.results / "zinb_records.csv", args.results / "zinb_pit_by_window.csv")
-    fig_forecast_showcase(args.out, ["CVE-2021-44228", "CVE-2023-20198", "CVE-2024-1709"])
+    fig_forecast_showcase(args.out, ["CVE-2021-44228", "CVE-2023-20198", "CVE-2024-1709", "CVE-2025-55182"])
     fig_short_history_forecast(args.out, ["CVE-2026-41089", "CVE-2026-0257"])
 
     print("Done.")

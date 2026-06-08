@@ -672,9 +672,11 @@ lead.}
 
 \section{Illustrative Operational Forecasts}\label{sec:showcase}
 To make the recommendations concrete, \Cref{fig:showcase} shows genuine forward
-forecasts for three actively-exploited vulnerabilities---Log4Shell
-(CVE-2021-44228), the Cisco IOS~XE web-UI flaw (CVE-2023-20198), and ConnectWise
-ScreenConnect (CVE-2024-1709)---produced exactly as an operational system would.
+forecasts for four actively-exploited vulnerabilities---Log4Shell
+(CVE-2021-44228), the Cisco IOS~XE web-UI flaw (CVE-2023-20198), ConnectWise
+ScreenConnect (CVE-2024-1709), and the React Server Components RCE
+(CVE-2025-55182), the last under sustained rather than fading
+activity---produced exactly as an operational system would.
 For each CVE the population prior is fit leave-one-out from the rest of the corpus,
 the recommended model is fit on the \emph{entire} observed history, and the next 14
 days are forecast out-of-sample (mean and 80\%/95\% predictive intervals). The left
@@ -695,7 +697,7 @@ deployment could surface and refresh daily as new sightings arrive.
 \begin{figure}[H]
 \centering
 \includegraphics[width=\linewidth]{figures/forecast_showcase.png}
-\caption{Out-of-sample 14-day forward forecasts for three actively-exploited CVEs,
+\caption{Out-of-sample 14-day forward forecasts for four actively-exploited CVEs,
 using the paper's recommended models: the empirical-Bayes hierarchical hurdle on
 all sightings (left) and the type-specific pooled hurdle on the exploited stream
 (right). Grey: observed history; dotted line marks the last observation; coloured

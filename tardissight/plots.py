@@ -54,10 +54,23 @@ MODEL_COLORS = {
     "rolling_mean_7": "#009E73",
     "sba": "#882255",
 }
+MODEL_COLORS["hier_exploited"] = "#0072B2"
+MODEL_COLORS["typed_sum"] = "#0072B2"
+MODEL_COLORS["pooled_total"] = "#D55E00"
 MODEL_LABELS = {
     "hier_hurdle": "Hierarchical hurdle (pooled)",
+    "hier_exploited": "Pooled (type-specific prior)",
     "indep_hurdle_nb": "Hurdle NB (unpooled)",
     "rolling_mean": "Rolling mean",
+    "typed_sum": "Typed decomposition (sum)",
+    "pooled_total": "Single pooled total",
+}
+
+# Colourblind-friendly colours per sighting type.
+TYPE_COLORS = {
+    "seen": "#56B4E9",
+    "published-proof-of-concept": "#E69F00",
+    "exploited": "#D55E00",
 }
 
 
@@ -158,10 +171,10 @@ def fig_tier1_crps_per_cve(out: Path, per_cve_csv: Path) -> None:
     plt.close(fig)
 
 
-def fig_pooling_crps_vs_window(out: Path, records_csv: Path) -> None:
-    """THE Tier-2 figure: CRPS vs training-window size, with ±SEM bands."""
+def _crps_vs_window(records_csv: Path, models: list[str], title: str, outfile: Path, missing_hint: str) -> None:
+    """Shared line plot: mean CRPS vs training-window size with ±SEM bands."""
     if not records_csv.exists():
-        print(f"  skip pooling_crps_vs_window: {records_csv} not found (run `python -m tardissight.eval.run_pooling`)")
+        print(f"  skip {outfile.name}: {records_csv} not found ({missing_hint})")
         return
     df = pd.read_csv(records_csv)
     g = df.groupby(["model", "window"])["crps"]
@@ -169,21 +182,91 @@ def fig_pooling_crps_vs_window(out: Path, records_csv: Path) -> None:
     sem = (g.std() / np.sqrt(g.count())).unstack("model")
 
     fig, ax = plt.subplots(figsize=(7.5, 5))
-    for model in ["rolling_mean", "indep_hurdle_nb", "hier_hurdle"]:
+    for model in models:
         if model not in mean.columns:
             continue
         x = mean.index.to_numpy()
         y = mean[model].to_numpy()
         e = sem[model].to_numpy()
-        ax.plot(x, y, "-o", color=MODEL_COLORS[model], label=MODEL_LABELS[model], linewidth=2)
-        ax.fill_between(x, y - e, y + e, color=MODEL_COLORS[model], alpha=0.15)
+        ax.plot(x, y, "-o", color=MODEL_COLORS.get(model, "#777"), label=MODEL_LABELS.get(model, model), linewidth=2)
+        ax.fill_between(x, y - e, y + e, color=MODEL_COLORS.get(model, "#777"), alpha=0.15)
 
     ax.set_xlabel("training-window size (days)")
     ax.set_ylabel("CRPS (lower is better)")
-    ax.set_title("Tier 2: partial pooling wins most when data is scarce")
+    ax.set_title(title)
     ax.legend(frameon=False)
     fig.tight_layout()
-    fig.savefig(out / "pooling_crps_vs_window.png")
+    fig.savefig(outfile)
+    plt.close(fig)
+
+
+def fig_pooling_crps_vs_window(out: Path, records_csv: Path) -> None:
+    """THE Tier-2 figure: CRPS vs training-window size, with ±SEM bands."""
+    _crps_vs_window(
+        records_csv,
+        ["rolling_mean", "indep_hurdle_nb", "hier_hurdle"],
+        "Tier 2: partial pooling wins most when data is scarce",
+        out / "pooling_crps_vs_window.png",
+        "run `python -m tardissight.eval.run_pooling`",
+    )
+
+
+def fig_typed_priors(out: Path, priors_csv: Path) -> None:
+    """Per-type population priors — characterises how the sighting types differ."""
+    if not priors_csv.exists():
+        print(f"  skip typed_priors: {priors_csv} not found (run `python -m tardissight.eval.run_typed`)")
+        return
+    df = pd.read_csv(priors_csv, index_col=0)
+    metrics = [
+        ("mean_activity", "Activity rate\n(P(day has the type))"),
+        ("mean_burst_rate", "Burst rate\n(mean count | active)"),
+        ("nb_alpha", "Over-dispersion (NB α)"),
+    ]
+    fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+    for ax, (col, title) in zip(axes, metrics):
+        colors = [TYPE_COLORS.get(t, "#777") for t in df.index]
+        ax.bar(range(len(df)), df[col].to_numpy(), color=colors)
+        ax.set_xticks(range(len(df)))
+        ax.set_xticklabels([t.replace("published-proof-of-concept", "PoC") for t in df.index], rotation=15)
+        ax.set_title(title)
+    fig.suptitle("Tier 3: sighting types have distinct dynamics (population priors)")
+    fig.tight_layout()
+    fig.savefig(out / "typed_priors.png")
+    plt.close(fig)
+
+
+def fig_typed_exploited_crps(out: Path, records_csv: Path) -> None:
+    """Headline Tier-3 figure: pooling helps the scarce, high-value exploited signal."""
+    _crps_vs_window(
+        records_csv,
+        ["rolling_mean", "indep_hurdle_nb", "hier_exploited"],
+        "Tier 3: pooling the exploited signal across CVEs",
+        out / "typed_exploited_crps.png",
+        "run `python -m tardissight.eval.run_typed`",
+    )
+
+
+def fig_typed_lead_lag(out: Path, lead_lag_csv: Path) -> None:
+    """Cross-correlation of precursor types with exploited activity vs lag."""
+    if not lead_lag_csv.exists():
+        print(f"  skip typed_lead_lag: {lead_lag_csv} not found (run `python -m tardissight.eval.run_typed`)")
+        return
+    df = pd.read_csv(lead_lag_csv)
+    fig, ax = plt.subplots(figsize=(8, 5))
+    for precursor, sub in df.groupby("precursor"):
+        sub = sub.sort_values("lag")
+        label = precursor.replace("published-proof-of-concept", "PoC")
+        ax.plot(sub["lag"], sub["mean_xcorr"], "-o", color=TYPE_COLORS.get(precursor, "#777"), label=label, ms=4)
+    ax.axhline(0, color="black", linewidth=0.8)
+    ax.axvline(0, color="grey", linestyle=":", linewidth=1)
+    ax.axvspan(0, df["lag"].max(), color="green", alpha=0.05)
+    ax.text(df["lag"].max(), ax.get_ylim()[1] * 0.9, "precursor leads →", ha="right", fontsize=9, color="green")
+    ax.set_xlabel("lag (days);  positive = precursor leads exploitation")
+    ax.set_ylabel("mean cross-correlation with exploited")
+    ax.set_title("Tier 3: do PoC / seen sightings precede exploitation?")
+    ax.legend(frameon=False)
+    fig.tight_layout()
+    fig.savefig(out / "typed_lead_lag.png")
     plt.close(fig)
 
 
@@ -254,6 +337,9 @@ def main() -> None:
     fig_tier1_crps_per_cve(args.out, args.results / "backtest_crps_per_cve.csv")
     fig_pooling_crps_vs_window(args.out, args.results / "pooling_records.csv")
     fig_forecast_example(args.out, args.example_cve)
+    fig_typed_priors(args.out, args.results / "typed_priors.csv")
+    fig_typed_exploited_crps(args.out, args.results / "typed_exploited_records.csv")
+    fig_typed_lead_lag(args.out, args.results / "typed_lead_lag.csv")
 
     print("Done.")
 

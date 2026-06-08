@@ -99,6 +99,51 @@ def load_series(vuln_id: str, *, use_cache: bool = True, refresh: bool = False) 
     return daily_series(get_sightings(vuln_id, use_cache=use_cache, refresh=refresh))
 
 
+# The three sighting types that carry essentially all the signal; `confirmed`
+# and `patched` together are <0.1% of records and too rare to model, so they are
+# dropped (documented in docs/typed.md). `exploited` is the operationally
+# high-value signal; `published-proof-of-concept` (PoC) is a candidate precursor.
+SIGHTING_TYPES = ["seen", "published-proof-of-concept", "exploited"]
+
+
+def typed_daily_series(
+    sightings: list[dict[str, Any]], types: list[str] = SIGHTING_TYPES
+) -> dict[str, pd.Series]:
+    """Split sightings into one gap-free daily count series per ``type``.
+
+    All series share a single daily index spanning the CVE's full observation
+    window, so they are aligned and (over the modelled types) sum to the typed
+    total per day. A type absent from the data still gets an all-zero series so
+    the per-type model always has every component.
+    """
+    empty = {t: pd.Series(dtype="int64", name=t) for t in types}
+    if not sightings:
+        return empty
+
+    df = pd.DataFrame(sightings)
+    day = pd.to_datetime(df["creation_timestamp"], utc=True, errors="coerce").dt.floor("D")
+    df = df.assign(day=day).dropna(subset=["day"])
+    if df.empty:
+        return empty
+
+    full_index = pd.date_range(df["day"].min(), df["day"].max(), freq="D", tz="UTC")
+    out: dict[str, pd.Series] = {}
+    for t in types:
+        counts = df.loc[df["type"] == t].groupby("day").size()
+        series = counts.reindex(full_index, fill_value=0).astype("int64")
+        series.name = t
+        series.index.name = "date"
+        out[t] = series
+    return out
+
+
+def load_typed_series(
+    vuln_id: str, *, use_cache: bool = True, refresh: bool = False
+) -> dict[str, pd.Series]:
+    """Fetch (cached) sightings and return the per-type daily count series."""
+    return typed_daily_series(get_sightings(vuln_id, use_cache=use_cache, refresh=refresh))
+
+
 def build_corpus(vuln_ids: list[str], *, refresh: bool = False, pause: float = 0.5) -> dict[str, pd.Series]:
     """Fetch and cache a set of CVEs, returning ``{vuln_id: daily_series}``.
 

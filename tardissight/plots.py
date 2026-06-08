@@ -410,6 +410,48 @@ def fig_forecast_showcase(out: Path, cves: list[str], *, horizon: int = 14, hist
     plt.close(fig)
 
 
+def fig_short_history_forecast(out: Path, cves: list[str], *, horizon: int = 14,
+                               n_samples: int = 4000, seed: int = 0) -> None:
+    """The data-scarcity case made concrete: freshly-disclosed CVEs with only a
+    few weeks of history. One panel per CVE (single column), forecasting all
+    sightings the next `horizon` days. The pooled empirical-Bayes hurdle
+    (recommended) is shown with its mean + 80%/95% intervals; the unpooled hurdle's
+    mean and 80% interval are overlaid (dashed) to expose how, on so little data,
+    it is more erratic and over-confident — exactly what pooling fixes."""
+    rows = len(cves)
+    fig, axes = plt.subplots(rows, 1, figsize=(8, 3.0 * rows), squeeze=False)
+    blue, red = "#0072B2", "#D55E00"
+    for i, cve in enumerate(cves):
+        ax = axes[i][0]
+        series = load_series(cve)
+        prior = fit_population_prior([load_series(o) for o in EXTENDED_CVES if o != cve])
+        last = series.index.max()
+        future = pd.date_range(last + pd.Timedelta(days=1), periods=horizon, freq="D")
+
+        pooled = HierarchicalHurdle(prior, seed=seed).fit(series).sample(horizon, n_samples)
+        unpooled = Hurdle("negbin", trend=False, seed=seed).fit(series).sample(horizon, n_samples)
+        pq10, pq90 = np.quantile(pooled, [0.1, 0.9], axis=0)
+        pq025, pq975 = np.quantile(pooled, [0.025, 0.975], axis=0)
+        uq10, uq90 = np.quantile(unpooled, [0.1, 0.9], axis=0)
+
+        ax.plot(series.index, series.values, color="#555555", marker=".", ms=4, linewidth=0.9, label="observed")
+        ax.axvline(last, color="grey", linestyle=":", linewidth=1)
+        ax.fill_between(future, pq025, pq975, color=blue, alpha=0.12)
+        ax.fill_between(future, pq10, pq90, color=blue, alpha=0.28, label="pooled 80%/95%")
+        ax.plot(future, pooled.mean(axis=0), color=blue, marker="o", ms=3, linewidth=2, label="pooled mean (recommended)")
+        ax.plot(future, unpooled.mean(axis=0), color=red, linestyle="--", linewidth=1.8, label="unpooled mean")
+        ax.plot(future, uq10, color=red, linestyle=":", linewidth=1)
+        ax.plot(future, uq90, color=red, linestyle=":", linewidth=1, label="unpooled 80%")
+        ax.set_title(f"{cve}  —  only {len(series)} days of history", loc="left", fontsize=10)
+        ax.set_ylabel("sightings/day")
+        ax.tick_params(axis="x", rotation=30, labelsize=8)
+    axes[0][0].legend(frameon=False, fontsize=8, ncol=2, loc="upper left")
+    fig.suptitle("Forecasting freshly-disclosed CVEs: pooling enables it where isolated fitting cannot", y=1.0)
+    fig.tight_layout()
+    fig.savefig(out / "short_history_forecast.png")
+    plt.close(fig)
+
+
 def fig_zinb_comparison(out: Path, records_csv: Path, pit_csv: Path) -> None:
     """Tier-5 figure: CRPS (left) and PIT calibration (right) vs window for the
     zero-inflated NB, the empirical-Bayes hurdle, and the unpooled model."""
@@ -464,6 +506,7 @@ def main() -> None:
     fig_bayes_calibration(args.out, args.results / "bayes_records.csv", args.results / "bayes_pit_by_window.csv")
     fig_zinb_comparison(args.out, args.results / "zinb_records.csv", args.results / "zinb_pit_by_window.csv")
     fig_forecast_showcase(args.out, ["CVE-2021-44228", "CVE-2023-20198", "CVE-2024-1709"])
+    fig_short_history_forecast(args.out, ["CVE-2026-41089", "CVE-2026-0257"])
 
     print("Done.")
 

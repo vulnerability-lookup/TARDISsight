@@ -703,6 +703,28 @@ line is the forecast mean, with 80\% and 95\% predictive intervals shaded.}
 \label{fig:showcase}
 \end{figure}
 
+\paragraph{The data-scarce case.} The forecasts above use CVEs with long
+histories; the regime the hierarchical model is really built for is the opposite
+one---a vulnerability disclosed days ago. \Cref{fig:freshcve} shows two CVEs only
+26 days old, each with an early burst already fading. Fitting a model on so little
+data in isolation is exactly where the first paper's difficulties bite: the
+unpooled hurdle (dashed) latches onto the recent burst and extrapolates a high,
+wide forecast. The pooled model (solid, with intervals) instead shrinks toward the
+population of past CVEs and projects a more measured decline---the calibrated
+behaviour our backtests rewarded. This is the operational payoff of borrowing
+strength: a usable, well-tempered forecast from the first weeks of a CVE's life,
+when it is most needed and least supported by its own data.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/short_history_forecast.png}
+\caption{Forecasting freshly-disclosed CVEs (26 days of history). On so little
+data the unpooled hurdle (dashed: mean and 80\% interval) over-reacts to the recent
+burst; the pooled empirical-Bayes hurdle (solid, shaded 80\%/95\% intervals) shrinks
+toward the population and gives a calibrated, more conservative forecast.}
+\label{fig:freshcve}
+\end{figure}
+
 \section{Discussion: Operational Recommendations}
 The results translate into concrete guidance for a deployment such as
 Vulnerability-Lookup. (1) Adopt a probabilistic, count-based forecaster and report

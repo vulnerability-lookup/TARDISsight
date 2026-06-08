@@ -197,4 +197,8 @@ best-calibrated model**; drop time-trend extrapolation in favour of constant-rat
 count models with proper interval calibration. Natural next steps (Tier 2 of the
 roadmap): hierarchical pooling across CVEs to share the burst-size and zero-rate
 parameters, and adding day-of-week and EPSS-dynamics covariates.
+
+> **Tier 2 update.** Hierarchical pooling has now been prototyped and dominates
+> both the rolling-mean baseline and the best unpooled count model across all
+> training-window sizes — see [`pooling.md`](pooling.md).
 <!-- FINDINGS-END -->

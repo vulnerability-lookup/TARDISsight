@@ -35,7 +35,7 @@ import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 
 from tardissight.corpus import EXTENDED_CVES, PAPER_CVES
-from tardissight.data import load_series
+from tardissight.data import load_series, load_typed_series
 from tardissight.models.count import Hurdle
 from tardissight.models.hierarchical import HierarchicalHurdle, fit_population_prior
 
@@ -357,6 +357,59 @@ def fig_forecast_example(out: Path, cve: str, window: int = 14, horizon: int = 7
     plt.close(fig)
 
 
+def _forward_forecast(series, prior, horizon: int, n_samples: int, seed: int):
+    """Fit the EB hierarchical hurdle on the full series and forecast the next
+    `horizon` days. Returns (future_dates, mean, q10, q90, q025, q975)."""
+    model = HierarchicalHurdle(prior, seed=seed).fit(series)
+    samples = model.sample(horizon, n_samples)
+    last = series.index.max()
+    future = pd.date_range(last + pd.Timedelta(days=1), periods=horizon, freq="D")
+    q10, q90 = np.quantile(samples, [0.1, 0.9], axis=0)
+    q025, q975 = np.quantile(samples, [0.025, 0.975], axis=0)
+    return future, samples.mean(axis=0), q10, q90, q025, q975
+
+
+def fig_forecast_showcase(out: Path, cves: list[str], *, horizon: int = 14, history: int = 70,
+                          n_samples: int = 4000, seed: int = 0) -> None:
+    """Concrete operational forward forecasts for real CVEs, using the two models
+    the paper recommends: the empirical-Bayes hierarchical hurdle for *all*
+    sightings (left), and the type-specific pooled hurdle for the *exploited*
+    signal (right). For each CVE the population prior is fit leave-one-out from the
+    rest of the corpus, the model is fit on the full observed history, and the next
+    `horizon` days are forecast (mean + 80%/95% predictive intervals)."""
+    rows = len(cves)
+    fig, axes = plt.subplots(rows, 2, figsize=(13, 3.0 * rows), squeeze=False)
+    panels = [
+        ("All sightings", "#0072B2", lambda c: load_series(c),
+         lambda c: fit_population_prior([load_series(o) for o in EXTENDED_CVES if o != c])),
+        ("Exploited sightings", "#D55E00", lambda c: load_typed_series(c)["exploited"],
+         lambda c: fit_population_prior([load_typed_series(o)["exploited"] for o in EXTENDED_CVES if o != c])),
+    ]
+    for i, cve in enumerate(cves):
+        for j, (title, color, get_series, get_prior) in enumerate(panels):
+            ax = axes[i][j]
+            series = get_series(cve)
+            prior = get_prior(cve)
+            fut, mean, q10, q90, q025, q975 = _forward_forecast(series, prior, horizon, n_samples, seed)
+
+            hist = series.iloc[-history:]
+            ax.plot(hist.index, hist.values, color="#555555", marker=".", ms=3, linewidth=0.8, label="observed")
+            ax.axvline(series.index.max(), color="grey", linestyle=":", linewidth=1)
+            ax.fill_between(fut, q025, q975, color=color, alpha=0.15, label="95% interval")
+            ax.fill_between(fut, q10, q90, color=color, alpha=0.30, label="80% interval")
+            ax.plot(fut, mean, color=color, marker="o", ms=3, linewidth=2, label="forecast mean")
+            ax.tick_params(axis="x", rotation=30, labelsize=8)
+            if j == 0:
+                ax.set_ylabel(f"{cve}\nsightings/day", fontsize=9)
+            if i == 0:
+                ax.set_title(title)
+    axes[0][1].legend(frameon=False, fontsize=8, loc="upper right")
+    fig.suptitle(f"Operational {horizon}-day forecasts (empirical-Bayes hierarchical hurdle)", y=1.0)
+    fig.tight_layout()
+    fig.savefig(out / "forecast_showcase.png")
+    plt.close(fig)
+
+
 def fig_zinb_comparison(out: Path, records_csv: Path, pit_csv: Path) -> None:
     """Tier-5 figure: CRPS (left) and PIT calibration (right) vs window for the
     zero-inflated NB, the empirical-Bayes hurdle, and the unpooled model."""
@@ -410,6 +463,7 @@ def main() -> None:
     fig_typed_lead_lag(args.out, args.results / "typed_lead_lag.csv")
     fig_bayes_calibration(args.out, args.results / "bayes_records.csv", args.results / "bayes_pit_by_window.csv")
     fig_zinb_comparison(args.out, args.results / "zinb_records.csv", args.results / "zinb_pit_by_window.csv")
+    fig_forecast_showcase(args.out, ["CVE-2021-44228", "CVE-2023-20198", "CVE-2024-1709"])
 
     print("Done.")
 

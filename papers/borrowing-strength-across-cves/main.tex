@@ -670,6 +670,39 @@ lead.}
 \label{fig:leadlag}
 \end{figure}
 
+\section{Illustrative Operational Forecasts}\label{sec:showcase}
+To make the recommendations concrete, \Cref{fig:showcase} shows genuine forward
+forecasts for three actively-exploited vulnerabilities---Log4Shell
+(CVE-2021-44228), the Cisco IOS~XE web-UI flaw (CVE-2023-20198), and ConnectWise
+ScreenConnect (CVE-2024-1709)---produced exactly as an operational system would.
+For each CVE the population prior is fit leave-one-out from the rest of the corpus,
+the recommended model is fit on the \emph{entire} observed history, and the next 14
+days are forecast out-of-sample (mean and 80\%/95\% predictive intervals). The left
+column uses the empirical-Bayes hierarchical hurdle on all sightings; the right
+column uses the type-specific pooled hurdle on the \emph{exploited} stream alone.
+
+Two points stand out. First, the forecasts are \emph{honest probabilistic
+statements}: for these mature CVEs the expected daily count is well below one, yet
+the intervals retain a realistic upper tail, reflecting that a fresh exploit
+write-up or a scanning wave could reignite activity on any given day. A bare point
+forecast would hide exactly this risk; the interval is the actionable output.
+Second, the exploited-signal forecast (right column) is produced independently and
+is the quantity a defender most cares about---isolating it, rather than reading it
+off an all-sightings total, is precisely what the type-aware model of
+\Cref{sec:typed} buys. These are the per-CVE forecasts a Vulnerability-Lookup
+deployment could surface and refresh daily as new sightings arrive.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\linewidth]{figures/forecast_showcase.png}
+\caption{Out-of-sample 14-day forward forecasts for three actively-exploited CVEs,
+using the paper's recommended models: the empirical-Bayes hierarchical hurdle on
+all sightings (left) and the type-specific pooled hurdle on the exploited stream
+(right). Grey: observed history; dotted line marks the last observation; coloured
+line is the forecast mean, with 80\% and 95\% predictive intervals shaded.}
+\label{fig:showcase}
+\end{figure}
+
 \section{Discussion: Operational Recommendations}
 The results translate into concrete guidance for a deployment such as
 Vulnerability-Lookup. (1) Adopt a probabilistic, count-based forecaster and report

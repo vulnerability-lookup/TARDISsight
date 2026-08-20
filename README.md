@@ -16,7 +16,7 @@ You can find information about the various experiments in the ``docs`` folder.
 
 ## How to cite
 
-Bonhomme, C., & Dulaunoy, A. (2026). Modeling Sparse and Bursty Vulnerability Sightings: Forecasting Under Data Constraints. https://arxiv.org/abs/2604.16038
+- Bonhomme, C., & Dulaunoy, A. (2026). Modeling Sparse and Bursty Vulnerability Sightings: Forecasting Under Data Constraints. https://arxiv.org/abs/2604.16038
 
 ```bibtex
 @misc{bonhomme2026modelingsparseburstyvulnerability,
@@ -29,6 +29,21 @@ Bonhomme, C., & Dulaunoy, A. (2026). Modeling Sparse and Bursty Vulnerability Si
       url={https://arxiv.org/abs/2604.16038}, 
 }
 ```
+
+- Bonhomme, C., & Dulaunoy, A. (2026). Borrowing Strength Across Vulnerabilities: Hierarchical and Type-Aware Forecasting of Sparse Sightings. Zenodo. https://doi.org/10.5281/zenodo.22023078
+
+```bibtex
+@misc{bonhomme_2026_22023078,
+  author       = {Bonhomme, C{\'e}dric and Dulaunoy, Alexandre},
+  title        = {Borrowing Strength Across Vulnerabilities: Hierarchical and Type-Aware Forecasting of Sparse Sightings},
+  month        = {June},
+  year         = 2026,
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.22023078},
+  url          = {https://doi.org/10.5281/zenodo.22023078},
+}
+```
+
 
 ## License
 
